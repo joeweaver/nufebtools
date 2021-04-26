@@ -132,14 +132,16 @@ def get_cells(trajectory, time=0, scale=1E6):
     """
 
     time = str(time)
-    return(np.column_stack(
+    ret_array = np.column_stack(
         (trajectory['id'][time],
          scale*np.column_stack((trajectory['x'][time],
                                 trajectory['y'][time],
                                 trajectory['z'][time],
                                 trajectory[radius_key(time)])),
          np.full((len(trajectory['id'][time]), 1), NO_ANCESTOR_ASSIGNED)
-         )).astype(int))
+         )).astype(int)
+    # Occasionally a cell with id == 0 is saved, this is not a valid cell
+    return( ret_array[ret_array[:,CELL_ID_COL]!= 0])
 
 
 def get_seeds(trajectory, start_time=0, scale=1E6):
@@ -248,7 +250,7 @@ def assign_ancestry(trajectory):
             # it actually exists at this timestep
             if(len(cells[cells[:, CELL_ID_COL] == cell_id]) > 0):
                 ancestor_found = cells[cells[:, CELL_ID_COL] == cell_id][0]
-                ancestor_found[CELL_ANCESTOR_COL] = cell_id
+                ancestor_found[CELL_ANCESTOR_COL] = anc_id
                 cells[cells[:, CELL_ID_COL] == cell_id] = ancestor_found
 
         # for all the cells with no currently known ancestor, find the
@@ -268,13 +270,10 @@ def assign_ancestry(trajectory):
             y_new = naf[CELL_Y_COL]
             z_new = naf[CELL_Z_COL]
             naf_id = naf[CELL_ID_COL]
-            # Occasionally a trajectory file will contain an invalid cell
-            if(naf_id == 0):
-                break
             min_dist = -1
             nearest_ancestor = -1
             for cell_id, anc2_id in ancestry.items():
-                ancestor_found = cells[cells[:, CELL_ID_COL] == anc2_id]
+                ancestor_found = cells[cells[:, CELL_ID_COL] == cell_id]
                 if(len(ancestor_found) > 0):
                     x_old = ancestor_found[0, CELL_X_COL]
                     y_old = ancestor_found[0, CELL_Y_COL]
@@ -351,10 +350,6 @@ def get_colony_morphology_at_time(time, ancestor_id, ancestors, trajectory,
     for cell in sorted_array:
         loc = (int(cell[CELL_X_COL]), int(cell[CELL_Y_COL]))
         cell_id = cell[CELL_ID_COL]
-        # Occasionally a trajectory file will contain an invalid cell
-        # TODO dig deeper into why this is ocurring
-        if(cell_id <= 0):
-            break
         seed_id = ancestors[cell_id]
         if(seed_id == ancestor_id):
             color = (255, 255, 55)
