@@ -625,8 +625,8 @@ def combine_morphologies(colonies, facets):
     # TODO docstring
     joined_alltime = colonies.set_index('Colony ID').join(
         facets.set_index('Seed ID'), rsuffix=' (facet)')
-    joined_alltime['seed'] = joined_alltime.index
-    joined_alltime['winner_index'] = (joined_alltime['Area (pixels)'] /
+    joined_alltime['Seed ID'] = joined_alltime.index
+    joined_alltime['Winner Index'] = (joined_alltime['Area (pixels)'] /
                                       joined_alltime['Facet Area (pixels)'])
 
     median_colony_area = joined_alltime.groupby('Time (s)')['Area (pixels)'] \
@@ -639,7 +639,7 @@ def combine_morphologies(colonies, facets):
     ja['Median-Normed Colony Area'] = ((ja['Area (pixels)']
                                        - ja['Median Colony Area (pixels)'])
                                        / ja['Median Colony Area (pixels)'])
-    ja['Colony ID'] = ja['seed']
+    ja['Colony ID'] = ja['Seed ID']
     return(ja)
 
 
